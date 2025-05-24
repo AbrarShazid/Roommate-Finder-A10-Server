@@ -1,31 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "builds": [{ "src": "index.js", "use": "@vercel/node" }],
   "routes": [
     {
-      "src": "^/featured-roommates",
-      "dest": "/index.js"
-    },
-    {
-      "src": "^/roommates",
-      "dest": "/index.js"
-    },
-    {
-      "src": "^/roommate/.*",
-      "dest": "/index.js"
-    },
-    {
-      "src": "^/update/.*",
-      "dest": "/index.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/",
+      "dest": "index.js",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
   ]
