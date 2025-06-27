@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 app.use(
   cors({
     origin: [
-      "https://roommate-finder-a10-server.vercel.app",
+      "https://roommate-finder-a10.vercel.app", // ✅ This is your frontend!
       "http://localhost:3000",
       "http://localhost:5173",
     ],
