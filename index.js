@@ -45,25 +45,32 @@ async function run() {
       try {
         const { sort = "asc", type } = req.query;
     
+   
         const filter = {};
         if (type) {
-          filter.roomType = type; // Filters by roomType if provided
+          filter.roomType = type;
         }
     
-        const sortOrder = sort === "asc" ? 1 : -1; // 1 = ascending, -1 = descending
+      
+        const sortOption = { rent: sort === "asc" ? 1 : -1 };
     
-        // Convert rent to number before saving if needed, or make sure rent is stored as Number
+        // Fetch filter and sort data
         const listings = await roomMateCollecttion
           .find(filter)
-          .sort({ rent: sortOrder })
+          .sort(sortOption)
           .toArray();
     
         res.send(listings);
       } catch (error) {
-        console.error("Error fetching roommate listings:", error);
-        res.status(500).send({ message: "Server error" });
+        console.error("Error fetching roommates:", error);
+        res.status(500).json({ message: "Failed to load roommates." });
       }
     });
+
+
+
+
+
 
     // 6 data load for home page
     app.get("/featured-roommates", async (req, res) => {
