@@ -117,6 +117,41 @@ async function run() {
     })
 
 
+    // dashboard data 
+
+
+    app.get("/dashboard-stats", async (req, res) => {
+      try {
+        const listings = await roomMateCollecttion.find().toArray();
+    
+        const totalPosts = listings.length;
+        const totalLocations = new Set(listings.map(item => item.location)).size;
+       
+    
+        const sharedCount = listings.filter(p => p.roomType === "Shared").length;
+        const singleCount = listings.filter(p => p.roomType === "Single").length;
+    
+        const availableCount = listings.filter(p => p.availability === "available").length;
+       
+    
+    
+    
+        res.send({
+          totalPosts,
+          totalLocations,
+          sharedCount,
+          singleCount,
+          availableCount,
+         
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+    
+
+
 
 
 
