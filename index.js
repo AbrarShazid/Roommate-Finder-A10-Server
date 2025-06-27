@@ -9,15 +9,17 @@ const app = express();
 
 const port = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: [
-    'https://roommate-finder-a10-server.vercel.app',
-    'http://localhost:3000', // For local development
-    'https://your-frontend-domain.com' // Add your actual frontend domain
-  ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "https://roommate-finder-a10-server.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@shazid.sdvbyar.mongodb.net/?retryWrites=true&w=majority&appName=Shazid`;
@@ -40,8 +42,27 @@ async function run() {
 
     // get all data for listing page
     app.get("/roommates", async (req, res) => {
-      const listings = await roomMateCollecttion.find().toArray();
-      res.send(listings);
+      try {
+        const { sort = "asc", type } = req.query;
+    
+        const filter = {};
+        if (type) {
+          filter.roomType = type; // Filters by roomType if provided
+        }
+    
+        const sortOrder = sort === "asc" ? 1 : -1; // 1 = ascending, -1 = descending
+    
+        // Convert rent to number before saving if needed, or make sure rent is stored as Number
+        const listings = await roomMateCollecttion
+          .find(filter)
+          .sort({ rent: sortOrder })
+          .toArray();
+    
+        res.send(listings);
+      } catch (error) {
+        console.error("Error fetching roommate listings:", error);
+        res.status(500).send({ message: "Server error" });
+      }
     });
 
     // 6 data load for home page
@@ -97,73 +118,60 @@ async function run() {
       res.send(result);
     });
 
-    // update data 
+    // update data
 
-       // first get data by id 
+    // first get data by id
     app.get("/update/:id", async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const listing = await roomMateCollecttion.findOne(query);
-  res.send(listing);
-});
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const listing = await roomMateCollecttion.findOne(query);
+      res.send(listing);
+    });
 
+    app.put("/roommate/:id", async (req, res) => {
+      const id = req.params.id;
 
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const newData = req.body;
+      const updatedDoc = {
+        $set: newData,
+      };
 
-    app.put("/roommate/:id",async(req,res)=>{
-      const id=req.params.id;
+      const result = await roomMateCollecttion.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
 
-      const filter={_id: new ObjectId(id)}
-      const options={upsert : true};
-      const newData=req.body
-      const updatedDoc={
-        $set:newData
-      }
-
-      const result =await roomMateCollecttion.updateOne(filter,updatedDoc,options)
-      res.send(result)
-
-    })
-
-
-    // dashboard data 
-
+    // dashboard data
 
     app.get("/dashboard", async (req, res) => {
       try {
         const listings = await roomMateCollecttion.find().toArray();
-    
+
         const totalPosts = listings.length;
-        const totalLocations = new Set(listings.map(item => item.location)).size;
-       
-    
-        const sharedCount = listings.filter(p => p.roomType === "Shared").length;
-        const singleCount = listings.filter(p => p.roomType === "Single").length;
-    
-        const availableCount = listings.filter(p => p.availability === "available").length;
-       
-    
-    
-    
+        const totalLocations = new Set(listings.map((item) => item.location))
+          .size;
+        const totalUser = new Set(listings.map((item) => item.email)).size;
+
+        const availableCount = listings.filter(
+          (p) => p.availability === "available"
+        ).length;
+
         res.send({
           totalPosts,
           totalLocations,
-          sharedCount,
-          singleCount,
           availableCount,
-         
+          totalUser,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
         res.status(500).send({ message: "Server error" });
       }
     });
-    
-
-
-
-
-
-
 
     // delete data
     app.delete("/roommate/:id", async (req, res) => {
