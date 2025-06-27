@@ -9,7 +9,15 @@ const app = express();
 
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://roommate-finder-a10-server.vercel.app',
+    'http://localhost:3000', // For local development
+    'https://your-frontend-domain.com' // Add your actual frontend domain
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@shazid.sdvbyar.mongodb.net/?retryWrites=true&w=majority&appName=Shazid`;
@@ -120,7 +128,7 @@ async function run() {
     // dashboard data 
 
 
-    app.get("/dashboard-stats", async (req, res) => {
+    app.get("/dashboard", async (req, res) => {
       try {
         const listings = await roomMateCollecttion.find().toArray();
     
